@@ -2,173 +2,529 @@ package user;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+
+import java.awt.BorderLayout;
 import java.awt.Color;
 
-import javax.swing.JTabbedPane;
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.JTable;
-import javax.swing.JTextField;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
+import java.text.DateFormat;
 
-import main.MainJFrame;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+
+import javax.swing.JTable;
+
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
+
+import tcpserver.MemberDTO;
+import tcpserver.RentDTO;
+import tcpserver.TCPClient1;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.imageio.ImageIO;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 
+import main.LoginJFrame;
+
+/*	일반 사용자 화면
+ 
+ 	로그인 창에서 일반 사용자 계정으로 로그인하게 되면 나오게 되는 화면이다.
+ 	개인 정보, 대출 도서 정보, 도서 검색 화면이 나옴
+ 	개인 정보 수정, 반납 신청, 반납 예정일 연장, 도서 예약 및 취소 가능
+ 	도서관 정보 확인 및 위치 확인 가능
+   
+ */
+
+@SuppressWarnings("serial")
 public class UserJFrame extends JFrame implements ActionListener {
-	private JTable table_1;
-	private JTable searchTab;
-	private JTextField searchField;
-	JButton btn1, btn2, btn3, btnUpdate, btnDelete, btnLogout;
-	String[] user;
 	
-	// User 로그인 프레임 설정
-	public UserJFrame(String userIn) {
-		setTitle("사용자 이름 도서 이용 정보");
-		setSize(740, 600);
+	private JTable table1;
+	private JFileChooser fileOpen;
+	private FileNameExtensionFilter fileName;
+	private JButton returnButton, extensionButton;
+	private JButton registration = new JButton();
+	private JButton updateButton, deleteButton, logoutButton;
+	private int row, col;
+	private MemberDTO dto;
+	private RentDTO dto1;
+	private int offset = registration.getInsets().left;
+	private UserBookSearch search;
+	private DefaultTableModel model;
+
+	@SuppressWarnings("static-access")
+	public UserJFrame(String id) throws Exception {
+		
+		// 회원정보 가져오기
+		dto = new TCPClient1().personalInfo(id);
+
+		// 프레임 설정
+		setTitle(dto.getName() + "회원님 도서 이용 정보");
+		setSize(1350, 800);
 		getContentPane().setLayout(null);
 
-		JPanel panel = new JPanel();
-		panel.setBackground(Color.LIGHT_GRAY);
-		panel.setBounds(12, 10, 700, 541);
-		panel.setLayout(null);
-		getContentPane().add(panel);
-
+		// 탭 추가
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane.setFont(new Font("굴림", Font.BOLD, 14));
-		tabbedPane.setBounds(12, 10, 676, 520);
+		tabbedPane.setBounds(10, 15, 1310, 730);
+		getContentPane().add(tabbedPane);
 
-		// 회원정보, 도서 검색, 예약 판넬 객체 생성
-		JPanel mem = new JPanel();
-		JPanel search = new JPanel();
-		mem.setLayout(null);
-		search.setLayout(null);
+		// 회원정보 탭 설정
+		JPanel memberInfo = new JPanel();
+		memberInfo.setBackground(Color.LIGHT_GRAY);
+		memberInfo.setBounds(12, 10, 1460, 741);
+		memberInfo.setLayout(null);
+		tabbedPane.add("회원 정보", memberInfo);
 
-		// 회원정보 가져오기
-		user = userIn.split("/n");
+		// 도서관 정보 탭 설정
+		JPanel libraryInfo = new JPanel();
+		libraryInfo.setBackground(Color.LIGHT_GRAY);
+		libraryInfo.setBounds(12, 10, 1460, 741);
+		libraryInfo.setLayout(null);
+		tabbedPane.add("도서관 정보", libraryInfo);
 
-		// 회원정보 탭
-		tabbedPane.add("회원정보", mem);
-		String[] columnNames = { "번호", "도서 이름", "대출일", "반납 예정일" };
-		String[][] rowData = new String[10][4];
-		table_1 = new JTable(rowData, columnNames);
-		table_1.setBounds(12, 303, 647, 176);
-		mem.add(table_1);
+		// 도서관 정보 설정
+		JPanel libraryInfoPanel = new JPanel();
+		libraryInfoPanel.setBounds(12, 10, 638, 681);
+		libraryInfoPanel.setLayout(null);
+		libraryInfo.add(libraryInfoPanel);
 
+		// 도서관 정보 설정(도서관 사진 이미지)
+		JLabel libraryImage = new JLabel();
+		libraryImage.setBounds(12, 10, 614, 350);
+		libraryImage.setIcon(
+				// 라벨에 맞게 이미지 사이즈 조절
+				new ImageIcon(new ImageIcon("11.jpg").getImage().getScaledInstance(614, 350, Image.SCALE_DEFAULT)));
+		libraryInfoPanel.add(libraryImage);
+
+		// 설립일 라벨
+		JLabel setUpDate = new JLabel("설  립  일: ");
+		setUpDate.setFont(new Font("맑은 고딕", Font.BOLD, 15));
+		setUpDate.setBounds(38, 400, 90, 27);
+		libraryInfoPanel.add(setUpDate);
+
+		// 설립일 출력 라벨
+		JLabel setUpDateLab = new JLabel("");
+		setUpDateLab.setFont(new Font("맑은 고딕", Font.BOLD, 15));
+		setUpDateLab.setBounds(142, 400, 90, 27);
+
+		// 소재지 라벨
+		JLabel stead = new JLabel("소  재  지: ");
+		stead.setFont(new Font("맑은 고딕", Font.BOLD, 15));
+		stead.setBounds(38, 450, 90, 27);
+		libraryInfoPanel.add(stead);
+
+		// 소재지 출력 라벨
+		JLabel steadLab = new JLabel("");
+		steadLab.setFont(new Font("맑은 고딕", Font.BOLD, 15));
+		steadLab.setBounds(142, 450, 90, 27);
+		libraryInfoPanel.add(steadLab);
+
+		// 운영시간 라벨
+		JLabel operatingHours = new JLabel("운영 시간: ");
+		operatingHours.setFont(new Font("맑은 고딕", Font.BOLD, 15));
+		operatingHours.setBounds(38, 500, 90, 27);
+		libraryInfoPanel.add(operatingHours);
+
+		// 운영시간 출력 라벨
+		JLabel operatingHoursLab = new JLabel("");
+		operatingHoursLab.setFont(new Font("맑은 고딕", Font.BOLD, 15));
+		operatingHoursLab.setBounds(142, 500, 90, 27);
+		libraryInfoPanel.add(operatingHoursLab);
+
+		// 휴관일 라벨
+		JLabel close = new JLabel("휴  관  일: ");
+		close.setFont(new Font("맑은 고딕", Font.BOLD, 15));
+		close.setBounds(38, 550, 90, 27);
+		libraryInfoPanel.add(close);
+
+		// 휴관일 출력 라벨
+		JLabel closeLab = new JLabel("");
+		closeLab.setFont(new Font("맑은 고딕", Font.BOLD, 15));
+		closeLab.setBounds(142, 550, 90, 27);
+		libraryInfoPanel.add(closeLab);
+
+		// 전화번호 라벨
+		JLabel tel = new JLabel("전화 번호: ");
+		tel.setFont(new Font("맑은 고딕", Font.BOLD, 15));
+		tel.setBounds(38, 600, 90, 27);
+		libraryInfoPanel.add(tel);
+
+		// 전화번호 출력 라벨
+		JLabel libraryTelLab = new JLabel("");
+		libraryTelLab.setFont(new Font("맑은 고딕", Font.BOLD, 15));
+		libraryTelLab.setBounds(142, 600, 90, 27);
+		libraryInfoPanel.add(libraryTelLab);
+
+		// 도서관 정보 설정
+		JPanel userMapPanel = new JPanel();
+		userMapPanel.setBounds(655, 10, 638, 681);
+		userMapPanel.add(new UserMap().getPanel());
+		userMapPanel.setLayout(null);
+		libraryInfo.add(userMapPanel);
+
+		// 회원 대출 목록 테이블
+		JPanel rentPanel = new JPanel(new BorderLayout());
+		rentPanel.setBackground(new Color(255, 255, 224));
+		rentPanel.setBounds(12, 502, 496, 229);
+		memberInfo.add(rentPanel);
+
+		// 일반 사용자 대출 정보를 가져옴
+		ArrayList<RentDTO> list = new TCPClient1().userRentInfo(dto.getId());
+		String[] columnNames = { "도서 이름", "대출일", "반납 예정일", "연장일" };
+		String[][] rowData = new String[list.size()][columnNames.length];
+
+		// 일반 사용자 대출 정보 출력
+		for (int i = 0; i < rowData.length; i++) {
+			dto1 = list.get(i);
+			rowData[i][0] = dto1.getTitle(); // 대출 중인 책 이름
+			rowData[i][1] = dto1.getRentDay(); // 대출일
+			rowData[i][2] = dto1.getReturnDay(); // 반납 예정일
+			rowData[i][3] = dto1.getExtensionDay(); // 반납 예정일
+		}
+
+		model = new DefaultTableModel(rowData, columnNames);
+		table1 = new JTable(model) {
+			// cell 값 수정을 못하도록 설정
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
+
+		JScrollPane scrollPane = new JScrollPane(table1);
+		rentPanel.add(scrollPane);
+
+		// 검색 판넬
+		JPanel searchPanel = new JPanel(null);
+//		panel_2.setBackground(new Color(255, 255, 224));
+		searchPanel.setBounds(683, 33, 628, 698);
+		search = new UserBookSearch();
+		search.id = dto.getId();
+		searchPanel.add(search.panel());
+		memberInfo.add(searchPanel);
+
+		// 회원 사진 등록 버튼
+		registration.setBounds(12, 33, 200, 280);
+		memberInfo.add(registration);
+		registration.setToolTipText("사진을 등록합니다.");
+
+		// ID 라벨
 		JLabel idLab = new JLabel("ID");
+		idLab.setBounds(271, 45, 39, 15);
+		memberInfo.add(idLab);
 		idLab.setFont(new Font("굴림", Font.BOLD | Font.ITALIC, 15));
-		idLab.setBounds(216, 25, 39, 15);
-		mem.add(idLab);
-		JLabel idPrint = new JLabel(user[0]);
+
+		// 로그인한 회원 아이디 출력
+		JLabel idPrint = new JLabel(dto.getId());
+		idPrint.setBounds(271, 70, 226, 15);
+		memberInfo.add(idPrint);
 		idPrint.setFont(new Font("굴림", Font.PLAIN, 15));
-		idPrint.setBounds(216, 50, 226, 15);
-		mem.add(idPrint);
 
+		// 나이 및 성별 계산
+		String rrn = dto.getRrn();
+		String userAge = age(rrn);
+		String userGender = gender(rrn);
+		System.out.println(userGender);
+
+		// 로그인한 계정에 사진 정보가 있을 경우 사진 출력
+		URL url = new URL("http://35.243.191.233/" + dto.getId() + ".jpg");
+		URLConnection con = url.openConnection();
+		HttpURLConnection exitCode = (HttpURLConnection) con;
+
+		if (exitCode.getDefaultAllowUserInteraction()) {
+//			exitCode.getResponseCode() == 200
+			Image image = ImageIO.read(url);
+
+			ImageIcon icon = new ImageIcon(image);
+
+			registration.setIcon(imageSize(icon, registration.getWidth() - offset, registration.getHeight() - offset));
+
+		} else {
+			registration.setText("사진 등록");
+		}
+
+		// 버튼(회원 정보 수정, 회원탈퇴, 로그아웃, 반납 신청, 반납 연장)
+		logoutButton = new JButton("로그아웃");
+		logoutButton.setBounds(12, 442, 200, 50);
+		memberInfo.add(logoutButton);
+		
+		deleteButton = new JButton("회원 탈퇴");
+		deleteButton.setBounds(12, 383, 201, 50);
+		memberInfo.add(deleteButton);
+		
+		updateButton = new JButton("회원 정보 수정");
+		updateButton.setBounds(12, 323, 200, 50);
+		memberInfo.add(updateButton);
+
+		returnButton = new JButton("반납 신청");
+		returnButton.setBounds(520, 547, 125, 32);
+		returnButton.addActionListener(this);
+		memberInfo.add(returnButton);
+		
+		extensionButton = new JButton("반납 연장");
+		extensionButton.setBounds(520, 650, 125, 32);
+		extensionButton.addActionListener(this);
+		memberInfo.add(extensionButton);
+
+		// 회원 정보 판넬
+		JPanel memberInfoPanel = new JPanel();
+		memberInfoPanel.setLayout(null);
+		memberInfoPanel.setBackground(new Color(255, 255, 224));
+		memberInfoPanel.setBounds(224, 33, 421, 459);
+		memberInfo.add(memberInfoPanel);
+
+		// NAME 라벨
 		JLabel nameLab = new JLabel("NAME");
+		nameLab.setBounds(46, 80, 60, 15);
+		memberInfoPanel.add(nameLab);
 		nameLab.setFont(new Font("굴림", Font.BOLD | Font.ITALIC, 15));
-		nameLab.setBounds(216, 86, 60, 15);
-		mem.add(nameLab);
-		JLabel namePrint = new JLabel(user[2]);
+
+		// 로그인한 회원 이름 출력
+		JLabel namePrint = new JLabel(dto.getName());
+		namePrint.setBounds(46, 105, 226, 15);
+		memberInfoPanel.add(namePrint);
 		namePrint.setFont(new Font("굴림", Font.PLAIN, 15));
-		namePrint.setBounds(216, 111, 226, 15);
-		mem.add(namePrint);
 
-		JLabel addLab = new JLabel("ADDERSS");
+		// AGE 라벨
+		JLabel ageLab = new JLabel("AGE");
+		ageLab.setBounds(46, 145, 77, 15);
+		memberInfoPanel.add(ageLab);
+		ageLab.setFont(new Font("굴림", Font.BOLD | Font.ITALIC, 15));
+
+		// 로그인한 회원 나이 출력
+		JLabel agePrint = new JLabel(userAge);
+		agePrint.setBounds(46, 170, 226, 15);
+		memberInfoPanel.add(agePrint);
+		agePrint.setFont(new Font("굴림", Font.PLAIN, 15));
+
+		// GENDER 라벨
+		JLabel genderLab = new JLabel("GENDER");
+		genderLab.setBounds(46, 212, 77, 15);
+		memberInfoPanel.add(genderLab);
+		genderLab.setFont(new Font("굴림", Font.BOLD | Font.ITALIC, 15));
+
+		// 로그인한 회원 성별 출력
+		JLabel lblDdd = new JLabel(userGender);
+		lblDdd.setBounds(46, 237, 226, 15);
+		memberInfoPanel.add(lblDdd);
+		lblDdd.setFont(new Font("굴림", Font.PLAIN, 15));
+
+		// TEL 라벨
+		JLabel telLab = new JLabel("TEL");
+		telLab.setBounds(46, 275, 97, 15);
+		memberInfoPanel.add(telLab);
+		telLab.setFont(new Font("굴림", Font.BOLD | Font.ITALIC, 15));
+
+		// 로그인한 회원 전화번호 출력
+		JLabel TelPrint = new JLabel(dto.getTel());
+		TelPrint.setBounds(46, 300, 226, 15);
+		memberInfoPanel.add(TelPrint);
+		TelPrint.setFont(new Font("굴림", Font.PLAIN, 15));
+
+		// ADDRESS 라벨
+		JLabel addLab = new JLabel("ADDRESS");
+		addLab.setBounds(46, 341, 97, 15);
+		memberInfoPanel.add(addLab);
 		addLab.setFont(new Font("굴림", Font.BOLD | Font.ITALIC, 15));
-		addLab.setBounds(216, 145, 97, 15);
-		mem.add(addLab);
-		JLabel addPrint = new JLabel(user[4]);
+
+		// 로그인한 회원 주소 출력
+		JLabel addPrint = new JLabel(dto.getAddress());
+		addPrint.setBounds(46, 366, 226, 15);
+		memberInfoPanel.add(addPrint);
 		addPrint.setFont(new Font("굴림", Font.PLAIN, 15));
-		addPrint.setBounds(216, 170, 226, 15);
-		mem.add(addPrint);
 
+		// GRADE 라벨
 		JLabel gradeLab = new JLabel("GRADE");
+		gradeLab.setBounds(46, 409, 77, 15);
+		memberInfoPanel.add(gradeLab);
 		gradeLab.setFont(new Font("굴림", Font.BOLD | Font.ITALIC, 15));
-		gradeLab.setBounds(216, 205, 77, 15);
-		mem.add(gradeLab);
+
+		// 로그인한 회원 등급 출력
 		JLabel gradePrint = new JLabel("일반 회원");
+		gradePrint.setBounds(46, 434, 83, 15);
+		memberInfoPanel.add(gradePrint);
 		gradePrint.setFont(new Font("굴림", Font.PLAIN, 15));
-		gradePrint.setBounds(216, 230, 226, 15);
-		mem.add(gradePrint);
 
-		btn1 = new JButton("Image");
-		btn1.setToolTipText("사진을 등록합니다.");
-		btn1.setBounds(22, 24, 161, 221);
-		mem.add(btn1);
-
-		btnUpdate = new JButton("회원 정보 수정");
-		btnUpdate.setBounds(468, 25, 191, 50);
-		mem.add(btnUpdate);
-
-		btnDelete = new JButton("회원 탈퇴");
-		btnDelete.setBounds(468, 111, 191, 50);
-		mem.add(btnDelete);
-
-		btnLogout = new JButton("로그아웃");
-		btnLogout.setBounds(468, 201, 191, 50);
-		mem.add(btnLogout);
-		table_1.getColumnModel().getColumn(0).setPreferredWidth(30);
-		table_1.getColumnModel().getColumn(1).setPreferredWidth(180);
-		table_1.getColumnModel().getColumn(2).setPreferredWidth(100);
-		table_1.getColumnModel().getColumn(3).setPreferredWidth(100);
-
-		// 도서 검색 탭
-		tabbedPane.add("소장 도서 검색", search);
-		searchField = new JTextField();
-		searchField.setBounds(107, 26, 317, 21);
-		search.add(searchField);
-		searchField.setColumns(10);
-		btn2 = new JButton("검색");
-		btn2.setBounds(447, 25, 115, 23);
-		search.add(btn2);
-		// 콤보 박스
-		String[] selectS = { "도서 이름", "저자 이름" };
-		JComboBox select = new JComboBox(selectS);
-		select.setBounds(12, 26, 83, 21);
-		search.add(select);
-
-		String[] searchhead = { "일련번호", "도서 이름", "저자", "분류", "대출 여부" };
-		String[][] searchCon = new String[20][5];
-		searchTab = new JTable(searchCon, searchhead);
-		searchTab.setBounds(12, 137, 647, 342);
-		search.add(searchTab);
-
-		// 도서 예약 버튼
-		btn3 = new JButton("도서 예약");
-		btn3.setToolTipText("도서 예약은 대출 중이지 않은 도서만 가능합니다.");
-		btn3.setBounds(447, 77, 115, 23);
-		search.add(btn3);
-		panel.add(tabbedPane);
-
-		// 버튼 액션
-		btn2.addActionListener(this);
-		btn3.addActionListener(this);
-		btnUpdate.addActionListener(this);
-		btnDelete.addActionListener(this);
-		btnLogout.addActionListener(this);
-
+		// 버튼 액션(사진 등록, 회원 정보 수정, 회원 탈퇴, 로그 아웃)
+		registration.addActionListener(this);
+		updateButton.addActionListener(this);
+		deleteButton.addActionListener(this);
+		logoutButton.addActionListener(this);
 		setVisible(true);
-	}
+
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		
+	} //default constructor end
+
+	// 입력받은 주민번호를 계산하여 나이를 반환하는 메소드
+	public String age(String userAge) {
+		
+		// 주민번호의 앞자리 2글자를 저장
+		Calendar cal = Calendar.getInstance();
+		int age = Integer.parseInt(userAge.substring(0, 2));
+
+		// 년도 계산
+		if (age > 18 && age < 100) {
+			age += 1900;
+		} else if (age <= 18) {
+			age += 2000;
+		}
+		
+		// 현재 년도를 저장
+		int year = cal.get(Calendar.YEAR);
+
+		// 나이 결과값을 String 타입의 result에 저장
+		String result = String.valueOf(year - age + 1);
+		return result;
+		
+	} // age method end
+
+	// 입력받은 주민번호를 계산하여 성별을 반환하는 메소드
+	public String gender(String userAge) {
+		// 주민번호 뒷자리 저장
+		String gender = userAge.substring(7, 8);
+		String result = null;
+
+		if (gender.equals("1") || gender.equals("3")) {
+			result = "남성";
+		} else if (gender.equals("2") || gender.equals("4")) {
+			result = "여성";
+		}
+
+		return result;
+		
+	} // gender method end
+
+	// 회원 사진 크기 조절
+	public Icon imageSize(ImageIcon icon, int width, int height) {
+		Image img = icon.getImage();
+		Image resizedImage = img.getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH);
+		return new ImageIcon(resizedImage);
+		
+	} // imageSize method end
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == btn1) {
+		UserWithdrawalJFrame withdrawal = null;
+		if (e.getSource() == registration) {
 
-		} else if (e.getSource() == btn2) {
+			// 사진 등록을 위한 JFileChooser 객체 생성
+			fileOpen = new JFileChooser();
+			// 필터링 확장자 지정
+			fileName = new FileNameExtensionFilter("jpg", "jpg");
+			fileOpen.setMultiSelectionEnabled(false);// 다중 선택 불가
+			// 확장자 추가
+			fileOpen.addChoosableFileFilter(fileName);
+//			fileOpen.showOpenDialog(btn1);
+			// 회원 사진 저장
+			if (fileOpen.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+				ImageIcon userIma = new ImageIcon(fileOpen.getSelectedFile().toString());
+				String imageName = fileOpen.getSelectedFile().toString();
 
-		} else if (e.getSource() == btn3) {						//	도서 예약
-			ReservationJFrame res = new ReservationJFrame();
-		} else if (e.getSource() == btnUpdate) {				//	회원 정보 수정
-			UserUpdateJFrame userUpdate = new UserUpdateJFrame(user);
-		} else if (e.getSource() == btnDelete) { 				//	회원 탈퇴
-			Withdrawal withdrawal = new Withdrawal();
-		} else {												//	로그 아웃
-			setVisible(false);
-			MainJFrame main = new MainJFrame();
-		}
+				int offset = registration.getInsets().left;
+				Icon icon = imageSize(userIma, registration.getWidth() - offset, registration.getHeight() - offset);
+				userIma = (ImageIcon) icon;
+				registration.setIcon(userIma);
 
-	}
-}
+				new TCPClient1().userImage(dto.getId(), imageName);
+
+			}
+			
+		} // if end 
+		
+		// 회원 정보 수정
+		else if (e.getSource() == updateButton) {
+			new UserUpdateJFrame(dto);
+			
+		// 회원 탈퇴
+		} else if (e.getSource() == deleteButton) {
+			withdrawal = new UserWithdrawalJFrame(dto);
+			withdrawal.successButton.addActionListener(this);
+			
+		// 로그 아웃
+		} else if (e.getSource() == logoutButton) {
+			new LoginJFrame();
+			dispose();
+
+		// 아이디 삭제 성공
+		} else if (e.getActionCommand().equals("성공")) {
+			dispose();
+			new LoginJFrame();
+			
+		// 반납 신청 이벤트
+		} else if (e.getSource() == returnButton) {
+
+			if (table1.getSelectedRow() == -1) {
+				JOptionPane.showMessageDialog(null, "반납 신청할 도서를 선택해 주세요");
+			} else {
+				row = table1.getSelectedRow();
+				col = 0; // cell의 어디를 선택하더라도 도서 제목 열로 고정
+
+				System.out.println(table1.getValueAt(row, col));
+				try {
+					new TCPClient1().bookReturn(dto.getId(), table1.getValueAt(row, col).toString());
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+
+		// 반납 연장 버튼 이벤트
+		} else if (e.getSource() == extensionButton) {
+
+			if (table1.getSelectedRow() == -1) {
+				JOptionPane.showMessageDialog(null, "반납 연장할 도서를 선택해 주세요");
+			} else {
+				int extensionDay = Integer.parseInt(JOptionPane.showInputDialog(null, "추가로 연장할 날을 입력해주세요 (7일 이내)"));
+				if (extensionDay > 7) {
+					JOptionPane.showMessageDialog(null, "7일 이내로 입력해주세요");
+				} else {
+					if (Integer.parseInt(table1.getValueAt(table1.getSelectedRow(), 3).toString()) + extensionDay > 7) {
+						JOptionPane.showMessageDialog(null, "연장 일수가 초과하였습니다.");
+					} else {
+
+						model.setValueAt(Integer.parseInt(table1.getValueAt(table1.getSelectedRow(), 3).toString())
+								+ extensionDay, table1.getSelectedRow(), 3);
+
+						DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+
+						Date date;
+						try {
+							date = df.parse(table1.getValueAt(table1.getSelectedRow(), 2).toString());
+							Calendar cal = Calendar.getInstance();
+							cal.setTime(date);
+							cal.add(Calendar.DATE, extensionDay);
+
+							String returnDay = df.format(cal.getTime());
+							model.setValueAt(returnDay, table1.getSelectedRow(), 2);
+							new TCPClient1().bookExtension(table1.getValueAt(table1.getSelectedRow(), 0).toString(),
+									returnDay, extensionDay);
+
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+
+					}
+				} // else end
+			}
+			
+		} // else if end(반납 연장 이벤트)
+		
+	} // //actionPerformed end
+
+}// class end
