@@ -3,29 +3,40 @@ package main;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import java.net.InetAddress;
+import java.net.URL;
+
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 import java.awt.Color;
+import java.awt.Image;
+
 import javax.swing.JTextField;
 
 import admin.AdminJFrame_admin;
-import tcpserver.TCPClient1;
+import tcpserver.TCPClient;
 import user.UserJFrame;
 
 import javax.swing.JPasswordField;
 import javax.swing.JPanel;
 import javax.swing.JButton;
+import javax.imageio.ImageIO;
+
 import javax.swing.ImageIcon;
+
+/*
+ * 로그인 화면 
+ */
 
 @SuppressWarnings("serial")
 public class LoginJFrame extends JFrame implements ActionListener {
 
 	JTextField idField;
 	JPasswordField pwField;
-	JButton btn1, btn2, btn3;
-	private JButton btn4;
+	JButton loginButton, joinButton, exitButton;
+	private JButton idPwFindButton;
 
 	// main 프레임 설정
 	public LoginJFrame() {
@@ -38,7 +49,23 @@ public class LoginJFrame extends JFrame implements ActionListener {
 
 		// image 라벨
 		JLabel imgLab = new JLabel("");
-		imgLab.setIcon(new ImageIcon("C:\\Users\\user\\Desktop\\도서관.jpeg"));
+
+		URL url;
+		boolean isAlive = false;
+		try {
+			url = new URL("http://35.243.191.233/main123123.jpg");
+			InetAddress pingcheck = InetAddress.getByName("35.243.191.233");
+			isAlive = pingcheck.isReachable(1000);
+			if (isAlive) {
+				Image image = ImageIO.read(url);
+				ImageIcon icon = new ImageIcon(image);
+				imgLab.setIcon(icon);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		imgLab.setBackground(Color.DARK_GRAY);
 		imgLab.setBounds(12, 21, 460, 230);
 		getContentPane().add(imgLab);
@@ -50,24 +77,24 @@ public class LoginJFrame extends JFrame implements ActionListener {
 		getContentPane().add(panel);
 
 		// 버튼(로그인)
-		btn1 = new JButton("로그인");
-		btn1.setBounds(291, 66, 97, 23);
-		panel.add(btn1);
+		loginButton = new JButton("로그인");
+		loginButton.setBounds(291, 66, 97, 23);
+		panel.add(loginButton);
 
 		// 버튼(회원가입)
-		btn2 = new JButton("회원가입");
-		btn2.setBounds(40, 10, 97, 23);
-		panel.add(btn2);
+		joinButton = new JButton("회원가입");
+		joinButton.setBounds(40, 10, 97, 23);
+		panel.add(joinButton);
 
 		// 버튼(종료)
-		btn3 = new JButton("종료");
-		btn3.setBounds(332, 10, 97, 23);
-		panel.add(btn3);
+		exitButton = new JButton("종료");
+		exitButton.setBounds(332, 10, 97, 23);
+		panel.add(exitButton);
 
 		// 버튼(아이디/비밀번호 찾기)
-		btn4 = new JButton("아이디/비밀번호 찾기");
-		btn4.setBounds(149, 10, 162, 23);
-		panel.add(btn4);
+		idPwFindButton = new JButton("아이디/비밀번호 찾기");
+		idPwFindButton.setBounds(149, 10, 162, 23);
+		panel.add(idPwFindButton);
 
 		// id 텍스트 필드
 		idField = new JTextField();
@@ -92,11 +119,11 @@ public class LoginJFrame extends JFrame implements ActionListener {
 		panel.add(pwField);
 		pwField.setToolTipText("8글자 이내 입력");
 
-		btn1.addActionListener(this);
-		btn2.addActionListener(this);
-		btn3.addActionListener(this);
-		btn4.addActionListener(this);
-
+		loginButton.addActionListener(this);
+		joinButton.addActionListener(this);
+		exitButton.addActionListener(this);
+		idPwFindButton.addActionListener(this);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setVisible(true);
 	}
 
@@ -104,56 +131,47 @@ public class LoginJFrame extends JFrame implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// 로그인
-		if (e.getSource() == btn1) {
+		if (e.getSource() == loginButton) {
 
 			String id = idField.getText();
 			String pw = pwField.getText();
 			// 관리자 계정 로그인
 			if (id.equals("admin") && pw.equals("1234")) {
 				dispose();
-				try {
-					new AdminJFrame_admin();
-				} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+
+				new AdminJFrame_admin();
 
 				// 일반 회원 로그인
 			} else {
 				String result = null;
-				try {
-					if (id.trim().equals("")) {
-						JOptionPane.showMessageDialog(null, "아이디를 입력해 주세요", "아이디 입력", JOptionPane.INFORMATION_MESSAGE);
-					} else {
-						result = new TCPClient1().loginCheck(id + "\n" + pw);
-						if (result.equals("NOID")) {
-							JOptionPane.showMessageDialog(null, "아이디가 없습니다.");
-						} else if (result.equals("PASS")) {
-							dispose();
-							new UserJFrame(id);
-						} else {
-							JOptionPane.showMessageDialog(null, "비밀번호가 틀렸습니다.");
-						}
-					}
 
-				} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				if (id.trim().equals("")) {
+					JOptionPane.showMessageDialog(null, "아이디를 입력해 주세요", "아이디 입력", JOptionPane.INFORMATION_MESSAGE);
+				} else {
+					result = new TCPClient().loginCheck(id + "\n" + pw);
+					if (result.equals("NOID")) {
+						JOptionPane.showMessageDialog(null, "아이디가 없습니다.");
+					} else if (result.equals("PASS")) {
+						dispose();
+						new UserJFrame(id);
+					} else {
+						JOptionPane.showMessageDialog(null, "비밀번호가 틀렸습니다.");
+					}
 				}
 
 			}
 		}
 		// 회원가입
-		else if (e.getSource() == btn2) {
+		else if (e.getSource() == joinButton) {
 			// 회원가입 프레임
-			new JoinJFrame();
+			new SignUpJFrame();
 		}
 		// 아이디/비밀번호 찾기
-		else if (e.getSource() == btn4) {
+		else if (e.getSource() == idPwFindButton) {
 			new IdPwFindJFrame();
 		} else { // 종료
 			JOptionPane.showMessageDialog(null, "프로그램을 종료합니다.");
-			dispose();
+			setDefaultCloseOperation(EXIT_ON_CLOSE);
 		}
 	}
 }
