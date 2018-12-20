@@ -2,8 +2,10 @@ package admin;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
@@ -12,7 +14,8 @@ import java.awt.SystemColor;
 
 import javax.swing.border.BevelBorder;
 
-import tcpserver.TCPClient1;
+import tcpserver.BookDTO;
+import tcpserver.TCPClient;
 
 /*
  * 도서 등록
@@ -126,13 +129,34 @@ public class BookRegister_admin implements ActionListener {
 
 		// 등록버튼을 눌렀을 때
 		if (e.getSource() == registButton) {
-			String info = numberField.getText() + "\n" + nameField.getText() + "\n" + authorField.getText() + "\n"
-					+ publisherField.getText() + "\n" + yearField.getText() + "\n" + billField.getText();
-			try {
-				new TCPClient1().bookRegist(info);
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			ArrayList<BookDTO> list = new TCPClient().getBookInfo();
+			int count = 0;
+			for (int i = 0; i < list.size(); i++) {
+				BookDTO dto = list.get(i);
+				if (dto.getNumber().equals(numberField.getText())) {
+					JOptionPane.showMessageDialog(null, "해당 일련번호가 존재합니다.");
+					count++;
+					break;
+				} else if (dto.getTitle().equals(nameField.getText())) {
+					JOptionPane.showMessageDialog(null, "제목이 존재합니다.");
+					count++;
+					break;
+				}
+			}
+			if (count == 0) {
+				String info = numberField.getText() + "\n" + nameField.getText() + "\n" + authorField.getText() + "\n"
+						+ publisherField.getText() + "\n" + yearField.getText() + "\n" + billField.getText();
+
+				new TCPClient().bookRegist(info);
+
+				numberField.setText("");
+				nameField.setText("");
+				authorField.setText("");
+				publisherField.setText("");
+				yearField.setText("");
+				billField.setText("");
+				JOptionPane.showMessageDialog(null, "등록완료");
+
 			}
 		}
 

@@ -11,7 +11,7 @@ import javax.swing.border.BevelBorder;
 import javax.swing.table.DefaultTableModel;
 
 import tcpserver.ReturnDTO;
-import tcpserver.TCPClient1;
+import tcpserver.TCPClient;
 
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -37,8 +37,9 @@ public class BookReturn_admin implements ActionListener, MouseListener {
 	private int row = -1;
 	private int row2 = -1;
 	private String[] value;
+	private JButton refreshButton;
 
-	public BookReturn_admin() throws Exception {
+	public BookReturn_admin() {
 
 		// 메인 패널 설정
 		mainPanel = new JPanel();
@@ -47,7 +48,7 @@ public class BookReturn_admin implements ActionListener, MouseListener {
 		mainPanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 
 		// DB에서 반납정보 가져오기
-		returnInfo = new TCPClient1().getReturn();
+		returnInfo = new TCPClient().getReturnInfoAll();
 
 		// 반납 정보 표만들기
 		String[] column = { "Id", "Title", "반납신청일" };
@@ -129,6 +130,11 @@ public class BookReturn_admin implements ActionListener, MouseListener {
 		infoTable.getTableHeader().setReorderingAllowed(false); // 이동 불가
 		infoTable2.getTableHeader().setReorderingAllowed(false); // 이동 불가
 
+		refreshButton = new JButton("새로고침");
+		refreshButton.setBounds(376, 10, 97, 23);
+		refreshButton.addActionListener(this);
+		mainPanel.add(refreshButton);
+
 	} // default constructor end
 
 	// 메인 패널 반환
@@ -157,21 +163,36 @@ public class BookReturn_admin implements ActionListener, MouseListener {
 		} else if (e.getSource() == returnCheckButton) {
 
 			String[] bookReturn = null;
+
+			bookReturn = new String[dtm2.getRowCount()];
 			for (int i = 0; i < dtm2.getRowCount(); i++) {
-				bookReturn = new String[dtm2.getRowCount()];
 				bookReturn[i] = dtm2.getValueAt(i, 1).toString();
+
 			}
 
-			try {
-				new TCPClient1().returnCheck(bookReturn);
-				for (int i = 0; i < dtm2.getRowCount(); i++) {
-					dtm2.removeRow(0);
-				}
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			new TCPClient().returnBook_admin(bookReturn);
+			String[] column = { "Id", "Title", "반납신청일" };
+			dtm2.setDataVector(null, column);
+
+		} else if (e.getSource() == refreshButton) {
+			// DB에서 반납정보 가져오기
+
+			returnInfo = new TCPClient().getReturnInfoAll();
+
+			// 반납 정보 표만들기
+			String[] column = { "Id", "Title", "반납신청일" };
+			String[][] row = new String[returnInfo.size()][column.length];
+
+			// row값에 데이터 입력
+			for (int i = 0; i < row.length; i++) {
+				ReturnDTO dto = (ReturnDTO) returnInfo.get(i);
+				row[i][0] = dto.getId();
+				row[i][1] = dto.getTitle();
+				row[i][2] = dto.getApplyday();
 			}
 
+			dtm.setDataVector(row, column);
+			dtm2.setDataVector(null, column);
 		}
 
 	} // actionPerformed end

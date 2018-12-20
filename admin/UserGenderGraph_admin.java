@@ -14,7 +14,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 import tcpserver.MemberDTO;
-import tcpserver.TCPClient1;
+import tcpserver.TCPClient;
 
 /*
  * 회원 성별을 분류하여 그래프로 변환
@@ -23,8 +23,8 @@ import tcpserver.TCPClient1;
 public class UserGenderGraph_admin {
 	ChartPanel chartPanel;
 
-	public UserGenderGraph_admin() throws Exception {
-		ArrayList<MemberDTO> member = new TCPClient1().allMemberInfo();
+	public UserGenderGraph_admin() {
+		ArrayList<MemberDTO> member = new TCPClient().getUserInfoAll();
 		int[] count = new int[2];
 		for (int i = 0; i < member.size(); i++) {
 			if (member.get(i).getRrn().charAt(6) == '1') {
@@ -44,7 +44,7 @@ public class UserGenderGraph_admin {
 
 		// 2. 그래프 전체의 경계선 설정
 		chart.setBorderVisible(true); // 차트전체의 경계선이 나타난다.
-		chart.setBorderPaint(Color.BLUE); // 차트전체의 경계선의 색을 파란색으로 정한다.
+		chart.setBorderPaint(Color.WHITE); // 차트전체의 경계선의 색을 파란색으로 정한다.
 		chart.setBorderStroke(new BasicStroke(5)); // 차트전체의 경계선의 두께를 정한다.
 
 		// 제목

@@ -11,7 +11,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JTextField;
 
 import tcpserver.MemberDTO;
-import tcpserver.TCPClient1;
+import tcpserver.TCPClient;
 
 import javax.swing.JButton;
 
@@ -113,32 +113,27 @@ public class UserUpdateJFrame_admin extends JFrame implements ActionListener {
 		btnCheck = new JButton("check");
 		btnCheck.addActionListener(this);
 		setVisible(true);
-	} //default constructor end
+	} // default constructor end
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// 회원정보 수정
 		if (e.getSource() == btnUpdateCom) {
 			String name = nameField.getText();
+			String pw = pwField.getText();
 			String tel = telField.getText();
 			String add = addrField.getText();
-			String pw = pwField.getText();
 
-			try {
-				new TCPClient1().userInfoChange_admin(userId + "\n" + pw + "\n" + name + "\n" + tel + "\n" + add);
-				String[] buttons = { "확인" };
-				int c = JOptionPane.showOptionDialog(null, "아이디 : " + name, "회원 정보 수정",
-						JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, buttons, "두번째값");
-				if (c == 0) {
-					btnCheck.doClick();
+			new TCPClient().userInfoChange_admin(userId + "\n" + pw + "\n" + name + "\n" + tel + "\n" + add);
+			String[] buttons = { "확인" };
+			int c = JOptionPane.showOptionDialog(null, "아이디 : " + name, "회원 정보 수정", JOptionPane.YES_NO_CANCEL_OPTION,
+					JOptionPane.QUESTION_MESSAGE, null, buttons, "두번째값");
+			if (c == 0) {
+				btnCheck.doClick();
 
-				}
-				dispose();
-
-			} catch (Exception e1) {
-
-				e1.printStackTrace();
 			}
+			dispose();
+
 			// 취소 버튼 클릭시
 		} else if (e.getSource() == btnCancle) {
 			dispose();

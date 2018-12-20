@@ -8,7 +8,7 @@ import javax.swing.border.BevelBorder;
 import javax.swing.table.DefaultTableModel;
 
 import tcpserver.MemberDTO;
-import tcpserver.TCPClient1;
+import tcpserver.TCPClient;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -43,7 +43,7 @@ public class UserManagement_admin implements ActionListener, MouseListener {
 		return mainPanel;
 	}
 
-	public UserManagement_admin() throws Exception {
+	public UserManagement_admin() {
 
 		// 메인 패널 설정
 		mainPanel = new JPanel();
@@ -71,7 +71,7 @@ public class UserManagement_admin implements ActionListener, MouseListener {
 		// 표 만들기
 
 		String[] column = { "아이디", "이름", "전화번호", "주소", "현재 대출 권수 ", "대출 횟 수 ", "연체 횟 수", "주민 번호" };
-		memberInfo = new TCPClient1().allMemberInfo();
+		memberInfo = new TCPClient().getUserInfoAll();
 		Object row[][] = new Object[memberInfo.size()][column.length];
 		for (int i = 0; i < row.length; i++) {
 			MemberDTO dto = (MemberDTO) memberInfo.get(i);
@@ -108,8 +108,8 @@ public class UserManagement_admin implements ActionListener, MouseListener {
 
 	} // default constructor end
 
-	public void refresh() throws Exception {
-		memberInfo = new TCPClient1().allMemberInfo();
+	public void refresh() {
+		memberInfo = new TCPClient().getUserInfoAll();
 		tableMainPanel.removeAll();
 		String select = combo.getSelectedItem().toString();
 		if (select.equals("아이디")) {
@@ -204,22 +204,12 @@ public class UserManagement_admin implements ActionListener, MouseListener {
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == searchButton) {
 
-			try {
-				refresh();
-
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			refresh();
 
 		} else if (e.getActionCommand().equals("check")) {
-			try {
 
-				refresh();
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			refresh();
+
 		}
 	} // actionPerformed end
 
@@ -240,14 +230,10 @@ public class UserManagement_admin implements ActionListener, MouseListener {
 					// 회원 정보 수정
 					if (c == 0) {
 						String id = infoTable.getValueAt(a, 0).toString();
-						try {
-							dto = new TCPClient1().personalInfo(id);
-							UserUpdateJFrame_admin update = new UserUpdateJFrame_admin(dto);
-							update.btnCheck.addActionListener(this);
-						} catch (Exception e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
+
+						dto = new TCPClient().getUserInfo(id);
+						UserUpdateJFrame_admin update = new UserUpdateJFrame_admin(dto);
+						update.btnCheck.addActionListener(this);
 
 						// 탈퇴 처리
 					} else if (c == 1) {

@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -21,7 +22,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 
 import main.LoginJFrame;
-import tcpserver.TCPClient1;
+import tcpserver.TCPClient;
 
 /*	관리자 화면
 	
@@ -42,7 +43,7 @@ public class AdminJFrame_admin extends JFrame implements ActionListener, MouseLi
 	private String[] value;
 	private int row = -1;
 
-	public AdminJFrame_admin() throws Exception {
+	public AdminJFrame_admin() {
 
 		getContentPane().setBackground(Color.LIGHT_GRAY);
 		setTitle("도서 관리 프로그램");
@@ -141,7 +142,7 @@ public class AdminJFrame_admin extends JFrame implements ActionListener, MouseLi
 		// 책 관리 탭에 책 검색패널 붙이기
 		JPanel bookSearchBasicPanel = new JPanel();
 		bookSearchBasicPanel.setLayout(null);
-		bookSearchBasicPanel.setBounds(546, 10, 645, 522);
+		bookSearchBasicPanel.setBounds(546, 10, 645, 670);
 		bookSearchBasicPanel.add(new BookSearch_admin().getPanel());
 		bookManageTab.add(bookSearchBasicPanel);
 
@@ -161,7 +162,7 @@ public class AdminJFrame_admin extends JFrame implements ActionListener, MouseLi
 		// 홈 탭에 회원 나이차트 추가
 		JPanel memberAgeChartBasicPanel = new JPanel();
 		memberAgeChartBasicPanel.setLayout(null);
-		memberAgeChartBasicPanel.setBounds(32, 514, 447, 258);
+		memberAgeChartBasicPanel.setBounds(32, 514, 460, 270);
 		ageChart = new UserAgeGraph_admin();
 		memberAgeChartBasicPanel.add(ageChart.getPanel());
 		homeTab.add(memberAgeChartBasicPanel);
@@ -169,7 +170,7 @@ public class AdminJFrame_admin extends JFrame implements ActionListener, MouseLi
 		// 홈 탭에 회원 성별차트 추가
 		JPanel memberGenderChartBasicPanel = new JPanel();
 		memberGenderChartBasicPanel.setLayout(null);
-		memberGenderChartBasicPanel.setBounds(564, 514, 431, 258);
+		memberGenderChartBasicPanel.setBounds(564, 514, 274, 258);
 		memberGenderChartBasicPanel.add(new UserGenderGraph_admin().getPanel());
 		homeTab.add(memberGenderChartBasicPanel);
 
@@ -193,7 +194,7 @@ public class AdminJFrame_admin extends JFrame implements ActionListener, MouseLi
 		// 프레임 설정
 		setVisible(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
-	} //default constructor end
+	} // default constructor end
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -202,6 +203,7 @@ public class AdminJFrame_admin extends JFrame implements ActionListener, MouseLi
 		if (e.getSource() == loginButton) {
 			setVisible(false);
 			ageChart.browser.dispose();
+
 			new LoginJFrame();
 
 			// ▶ 대출 버튼을 눌렀을 때
@@ -209,36 +211,36 @@ public class AdminJFrame_admin extends JFrame implements ActionListener, MouseLi
 
 			// 예약 현황테이블에 값이 선택 되었을 경우
 			if (row >= 0) {
-				try {
-					new TCPClient1().insertRent(value[0], value[1], value[2]);
-					DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-					Date date = df.parse(value[2]);
-					Calendar cal = Calendar.getInstance();
-					cal.setTime(date); // cal에 받아온 date값을 입력
-					cal.add(Calendar.DATE, 7); // cal 일자에 7일을 추가
-					String returnDay = df.format(cal.getTime()); // 7일을 더한 날을 받아오기
-					value[3] = returnDay; // 테이블 업데이트
-					reservationPanel.dtm.removeRow(row);
-					rentPanel.dtm.addRow(value);
-					row = -1; // 선택된 값 초기화
-				} catch (Exception e1) {
 
+				new TCPClient().rentBook(value[0], value[1], value[2]);
+				DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+				Date date = null;
+				try {
+					date = df.parse(value[2]);
+				} catch (ParseException e1) {
 					e1.printStackTrace();
 				}
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(date); // cal에 받아온 date값을 입력
+				cal.add(Calendar.DATE, 7); // cal 일자에 7일을 추가
+				String returnDay = df.format(cal.getTime()); // 7일을 더한 날을 받아오기
+				value[3] = returnDay; // 테이블 업데이트
+				reservationPanel.dtm.removeRow(row);
+				rentPanel.dtm.addRow(value);
+				row = -1; // 선택된 값 초기화
 
 			}
 
 		}
-	} //actionPerformed end
+	} // actionPerformed end
 
-	
-	//예약 테이블에 값을 선택 했을 경우
+	// 예약 테이블에 값을 선택 했을 경우
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
 		row = reservationPanel.infoTable.getSelectedRow();
 		value = new String[4];
-		
-		//value에 해당 row에 값을 넣는다.
+
+		// value에 해당 row에 값을 넣는다.
 		for (int i = 0; i < 3; i++) {
 			value[i] = reservationPanel.infoTable.getValueAt(row, i).toString();
 		}
@@ -267,5 +269,5 @@ public class AdminJFrame_admin extends JFrame implements ActionListener, MouseLi
 		// TODO Auto-generated method stub
 
 	}
-	
-}//class end
+
+}// class end

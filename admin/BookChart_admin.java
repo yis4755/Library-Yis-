@@ -20,7 +20,7 @@ import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.general.PieDataset;
 import org.jfree.util.Rotation;
 
-import tcpserver.TCPClient1;
+import tcpserver.TCPClient;
 
 import org.jfree.chart.plot.PiePlot3D;
 
@@ -32,7 +32,7 @@ import org.jfree.chart.plot.PiePlot3D;
 public class BookChart_admin {
 	private ChartPanel chartPanel;
 
-	public BookChart_admin() throws Exception {
+	public BookChart_admin() {
 
 		PieDataset dataset = createData(); // 데이터셋 객체 정의
 		JFreeChart chart = createChart(dataset); // 데이터셋을 참조하는 차트객체만들기
@@ -44,8 +44,8 @@ public class BookChart_admin {
 
 	}// default constructor end
 
-	private PieDataset createData() throws Exception {
-		TreeMap<String, Integer> b = new TCPClient1().bookKind2();
+	private PieDataset createData() {
+		TreeMap<String, Integer> b = new TCPClient().getTypeOfBook();
 		String[] kind = { "사회과학", "기술과학", "역사", "예술", "철학", "총류", "자연과학", "언어", "기타", "종교", "문학" }; // 차트에 들어갈 종류
 		DefaultPieDataset date = new DefaultPieDataset();
 		for (int i = 0; i < kind.length; i++) { // 차트에 들어간 종류에 대한 값 설정
@@ -74,7 +74,7 @@ public class BookChart_admin {
 		return chart;
 	} // JFreeChart end
 
-	public JPanel getChart() throws Exception {
+	public JPanel getChart() {
 		return chartPanel;
 	}
 

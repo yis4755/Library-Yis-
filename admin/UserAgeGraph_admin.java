@@ -13,7 +13,7 @@ import com.teamdev.jxbrowser.chromium.events.LoadAdapter;
 import com.teamdev.jxbrowser.chromium.swing.BrowserView;
 
 import tcpserver.MemberDTO;
-import tcpserver.TCPClient1;
+import tcpserver.TCPClient;
 
 /*
  * 회원나이를 분류하여 그래프로 변환
@@ -26,9 +26,9 @@ public class UserAgeGraph_admin {
 	private int[] count;
 	private JPanel mainPanel;
 
-	public UserAgeGraph_admin() throws Exception {
+	public UserAgeGraph_admin() {
 
-		ArrayList<MemberDTO> member = new TCPClient1().allMemberInfo();
+		ArrayList<MemberDTO> member = new TCPClient().getUserInfoAll();
 		count = new int[6];
 		for (int i = 0; i < member.size(); i++) {
 			int birthYear = Integer.parseInt("19" + member.get(i).getRrn().substring(0, 2));// 주민번호 앞자리 2개 인트변환
@@ -66,7 +66,7 @@ public class UserAgeGraph_admin {
 		return mainPanel;
 	}
 
-	public String getChart() throws Exception {
+	public String getChart() {
 
 		// 구굴 그래프 만드는 코드
 		String htmlString = "<html>\r\n" + "  <head>\r\n"
@@ -85,8 +85,8 @@ public class UserAgeGraph_admin {
 				+ "      view.setColumns([0, 1,\r\n" + "                       { calc: \"stringify\",\r\n"
 				+ "                         sourceColumn: 1,\r\n" + "                         type: \"string\",\r\n"
 				+ "                         role: \"annotation\" },\r\n" + "                       2]);\r\n" + "\r\n"
-				+ "      var options = {\r\n" + "        title: \"도서관 회원나이\",\r\n" + "        width: 420,\r\n"
-				+ "        height: 230,\r\n" + "        bar: {groupWidth: \"95%\"},\r\n"
+				+ "      var options = {\r\n" + "        title: \"도서관 회원나이\",\r\n" + "        width: 350,\r\n"
+				+ "        height: 180,\r\n" + "        bar: {groupWidth: \"95%\"},\r\n"
 				+ "        legend: { position: \"none\" },\r\n" + "      };\r\n"
 				+ "      var chart = new google.visualization.BarChart(document.getElementById(\"barchart_values\"));\r\n"
 				+ "      chart.draw(view, options);\r\n" + "  };\r\n" + "    </script>\r\n" + "  </head>\r\n"
