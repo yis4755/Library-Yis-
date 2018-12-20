@@ -9,14 +9,16 @@ public class RentDTO implements Serializable {
 	private String rentDay;
 	private String returnDay;
 	private String extensionDay;
+	private String returnCheck;
 
-	public RentDTO(String id, String title, String rentDay, String returnDay, String extensionDay) {
+	public RentDTO(String id, String title, String rentDay, String returnDay, String extensionDay, String returnCheck) {
 		super();
 		this.id = id;
 		this.title = title;
 		this.rentDay = rentDay;
 		this.returnDay = returnDay;
 		this.extensionDay = extensionDay;
+		this.returnCheck = returnCheck;
 	}
 
 	public String getId() {
@@ -57,6 +59,14 @@ public class RentDTO implements Serializable {
 
 	public void setExtensionDay(String extensionDay) {
 		this.extensionDay = extensionDay;
+	}
+
+	public String getReturnCheck() {
+		return returnCheck;
+	}
+
+	public void setReturnCheck(String returnCheck) {
+		this.returnCheck = returnCheck;
 	}
 
 }

@@ -14,11 +14,10 @@ public class MemberDTO implements Serializable {
 	private String booklate;
 	private String rrn;
 	private String image;
- 
+
 	public MemberDTO() {
-		// TODO Auto-generated constructor stub
 	}
-	
+
 	public MemberDTO(String id, String pw, String name, String tel, String address, String bookrentcurrent,
 			String bookrentcumlative, String booklate, String rrn) {
 		super();
@@ -113,5 +112,4 @@ public class MemberDTO implements Serializable {
 		this.image = image;
 	}
 
-	
 }
